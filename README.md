@@ -1,27 +1,30 @@
 # Eidos VM
 
-Eidos VM is a lightweight stack-based virtual machine designed to execute programs compiled from the Eidos language. It provides a modular instruction system, a heap-based memory model, and a fluent builder API for program construction.
+Eidos VM is a stack-based virtual machine with heap-managed runtime values and a structured instruction system. It is designed to execute programs compiled from the Eidos language through a custom IR pipeline.
+
+The VM provides a modular instruction set, a heap-based memory model, and a fluent builder API for constructing and lowering high-level constructs into executable bytecode-like instructions.
+
+---
 
 ## Features
 
-* Stack-based execution model
-* Heap-managed values (`VMInteger`, `VMDouble`, `VMString`, `VMBoolean`, `VMArray`)
-* Arithmetic, logical, comparison, and control flow instructions
-* Structured programming support:
-
-    * `if-else`
-    * `while`, `do-while`, `for`
-    * `match-case` (including ranges and lists)
-* Scope management (variables with nested scopes)
-* Built-in I/O operations
-* Error propagation using `VMResult`
-* Fluent `VMProgramBuilder` API
+- Stack-based execution model with heap-managed runtime values
+- Heap-backed value system (`VMInteger`, `VMDouble`, `VMString`, `VMBoolean`, `VMArray`)
+- Full instruction set including arithmetic, logical, comparison, and control-flow operations
+- Structured programming support via lowered control-flow constructs:
+  - `if-else`
+  - `while`, `do-while`, `for`
+  - `match-case` (including ranges and multi-value patterns)
+- Lexical-style scope management with nested environments
+- Built-in I/O abstraction layer
+- Error handling using heap-allocated `VMResult` with explicit propagation semantics
+- Fluent `VMProgramBuilder` for IR construction and control-flow generation
 
 ---
 
 ## Installation
 
-Add the VM to your project:
+The Eidos VM can be added as a local dependency in your project:
 
 ```gradle
 dependencies {
@@ -29,7 +32,7 @@ dependencies {
 }
 ```
 
-> Optionally attach `-sources.jar` and `-javadoc.jar` in your IDE for better navigation and documentation.
+> For a better development experience, it is recommended to also attach the -sources.jar and -javadoc.jar files in your IDE to enable source navigation and full API documentation support.
 
 ---
 
@@ -41,13 +44,12 @@ VMStack stack = new VMStack(1024);
 
 VMProgramBuilder builder = new VMProgramBuilder(heap);
 
-builder
-    .pushLiteral(new VMInteger(5))
-    .pushLiteral(new VMInteger(3))
-    .add()
-    .print();
-
-List<Instruction> program = builder.build();
+List<Instruction> program = builder
+        .pushLiteral(new VMInteger(5))
+        .pushLiteral(new VMInteger(3))
+        .add()
+        .print()
+        .build();
 
 VM vm = new VM(heap, stack, program);
 vm.execute();
@@ -59,37 +61,39 @@ vm.execute();
 
 ### Core Components
 
-* **VM** → Executes instructions
-* **VMHeap** → Stores all runtime values
-* **Stack** → Holds references (heap indices)
-* **Instruction** → Represents a single operation
-* **IOpCodeAction** → Defines instruction behavior
+- **VM** → Executes a linear instruction stream over a stack-based execution model
+- **VMHeap** → Stores all runtime values and heap-allocated objects
+- **VMStack** → Holds references (heap indices) used during execution
+- **Instruction** → Represents a single low-level operation in the VM
+- **IOpCodeAction** → Defines the execution behavior of each opcode
 
 ---
 
-### Instruction Categories
+### Instruction System
 
-* **Arithmetic** → `ADD`, `SUB`, `MUL`, `DIV`, `MOD`
-* **Logical** → `AND`, `OR`, `NOT`
-* **Comparison** → `EQ`, `NEQ`, `GT`, `LT`, `GTE`, `LTE`
-* **Control Flow** → `JMP`, `JMP_IF_TRUE`, `JMP_IF_FALSE`, `HALT`
-* **Stack** → `PUSH`, `POP`, `DUP`
-* **Scope** → `STORE`, `LOAD`, `ENTER_SCOPE`, `EXIT_SCOPE`
-* **Array** → `ARRAY_NEW`, `ARRAY_GET`, `ARRAY_SET`, `ARRAY_LENGTH`
-* **IO** → `PRINT`, `READ`, `INPUT`
+The VM instruction set is organized into semantic groups:
+
+- **Arithmetic** → `ADD`, `SUB`, `MUL`, `DIV`, `MOD`
+- **Logical** → `AND`, `OR`, `NOT`
+- **Comparison** → `EQ`, `NEQ`, `GT`, `LT`, `GTE`, `LTE`
+- **Control Flow** → `JMP`, `JMP_IF_TRUE`, `JMP_IF_FALSE`, `HALT`
+- **Stack Operations** → `PUSH`, `POP`, `DUP`
+- **Scope Management** → `STORE`, `LOAD`, `ENTER_SCOPE`, `EXIT_SCOPE`
+- **Heap Structures** → `ARRAY_NEW`, `ARRAY_GET`, `ARRAY_SET`, `ARRAY_LENGTH`
+- **IO Operations** → `PRINT`, `READ`, `INPUT`
 
 ---
 
 ## Program Builder
 
-The `VMProgramBuilder` provides a fluent API to construct programs:
+The `VMProgramBuilder` provides a fluent API for constructing an intermediate representation (IR) of a program. It abstracts instruction emission, scope handling, and control-flow lowering into structured constructs.
 
 ```java
 builder
     .pushLiteral(new VMInteger(10))
     .store("x")
     .ifElse(
-        () -> builder.load("x").pushLiteral(5).gt()
+        () -> builder.load("x").pushLiteral(5).gt(),
         () -> builder.load("x").print(),
         () -> builder.pushLiteral("Nope").print()
     );
@@ -113,28 +117,22 @@ builder.match(
 
 ## Error Handling
 
-Errors are handled using `VMResult` and propagated through the stack.
+The VM uses heap-allocated `VMResult` values to represent runtime errors. Errors are treated as first-class values rather than exceptions.
 
-* Invalid operations do not crash the VM
-* Errors are pushed as values and can be handled downstream
+Error propagation is handled explicitly during instruction execution:
 
----
-
-## Documentation
-
-* Attach `vm-1.0.0-javadoc.jar` in your IDE to view full API documentation
-* Attach `vm-1.0.0-sources.jar` to navigate source code
+- Invalid operations do not crash the VM
+- Errors are stored in the heap as `VMResult` values
+- Operations can detect and propagate errors before execution
+- Error values can be consumed and handled downstream like regular values
 
 ---
 
 ## Development
 
-Built with:
+This project is built with Java and Gradle.
 
-* Java
-* Gradle
-
-To build:
+To build the project:
 
 ```bash
 ./gradlew build
@@ -151,13 +149,11 @@ See the LICENSE file for details.
 
 ## Notes
 
-This VM is designed as part of the Eidos language ecosystem and may evolve alongside the compiler and type system.
+This VM is part of the Eidos language ecosystem and is designed to evolve alongside its compiler, type system, and IR generation pipeline.
 
----
+Its architecture prioritizes:
 
-## Future Improvements
-
-* Bytecode serialization
-* Debugger support
-* Optimizations (constant folding, peephole)
-* Standard library extensions
+- Explicit control over execution
+- Extensibility of the instruction set
+- Separation between IR generation and execution
+- Deterministic runtime behavior
