@@ -16,6 +16,7 @@ public final class ControlFlowBuilder {
 
   private final InstructionEmitter emitter;
   private final ProgramState state;
+  private final JumpBuilder jumps;
 
   /**
    * Creates a new control flow builder.
@@ -26,6 +27,7 @@ public final class ControlFlowBuilder {
   public ControlFlowBuilder(InstructionEmitter emitter, ProgramState state) {
     this.emitter = emitter;
     this.state = state;
+    this.jumps = new JumpBuilder(emitter, state);
   }
 
   /**
@@ -43,15 +45,15 @@ public final class ControlFlowBuilder {
    * @param elseBlock optional block to execute if the condition is false
    */
   public void ifElse(Runnable condition, Runnable ifBlock, Runnable... elseBlock) {
-    String elseLabel = newLabel("else");
-    String endLabel = newLabel("ifend");
+    String elseLabel = jumps.newLabel("else");
+    String endLabel = jumps.newLabel("ifend");
     condition.run();
-    jmpIfFalse(elseLabel);
+    jumps.jmpIfFalse(elseLabel);
     ifBlock.run();
-    jmp(endLabel);
-    label(elseLabel);
+    jumps.jmp(endLabel);
+    jumps.label(elseLabel);
     if (elseBlock.length > 0) elseBlock[0].run();
-    label(endLabel);
+    jumps.label(endLabel);
   }
 
   /**
@@ -69,14 +71,14 @@ public final class ControlFlowBuilder {
    * @param body      the loop body
    */
   public void whileLoop(Runnable condition, Runnable body) {
-    String startLabel = newLabel("while_start");
-    String endLabel = newLabel("while_end");
-    label(startLabel);
+    String startLabel = jumps.newLabel("while_start");
+    String endLabel = jumps.newLabel("while_end");
+    jumps.label(startLabel);
     condition.run();
-    jmpIfFalse(endLabel);
+    jumps.jmpIfFalse(endLabel);
     body.run();
-    jmp(startLabel);
-    label(endLabel);
+    jumps.jmp(startLabel);
+    jumps.label(endLabel);
   }
 
   /**
@@ -93,13 +95,13 @@ public final class ControlFlowBuilder {
    * @param condition the loop condition (must leave a boolean on the stack)
    */
   public void doWhileLoop(Runnable body, Runnable condition) {
-    String startLabel = newLabel("do_start");
-    String endLabel = newLabel("do_end");
-    label(startLabel);
+    String startLabel = jumps.newLabel("do_start");
+    String endLabel = jumps.newLabel("do_end");
+    jumps.label(startLabel);
     body.run();
     condition.run();
-    jmpIfTrue(startLabel);
-    label(endLabel);
+    jumps.jmpIfTrue(startLabel);
+    jumps.label(endLabel);
   }
 
   /**
@@ -122,17 +124,17 @@ public final class ControlFlowBuilder {
    */
   public void forLoop(Runnable init, Runnable condition, Runnable increment, Runnable body) {
     if (init != null) init.run();
-    String startLabel = newLabel("for_start");
-    String endLabel = newLabel("for_end");
-    label(startLabel);
+    String startLabel = jumps.newLabel("for_start");
+    String endLabel = jumps.newLabel("for_end");
+    jumps.label(startLabel);
     if (condition != null) {
       condition.run();
-      jmpIfFalse(endLabel);
+      jumps.jmpIfFalse(endLabel);
     }
     body.run();
     if (increment != null) increment.run();
-    jmp(startLabel);
-    label(endLabel);
+    jumps.jmp(startLabel);
+    jumps.label(endLabel);
   }
 
   /**
@@ -145,10 +147,10 @@ public final class ControlFlowBuilder {
     expr.run();
     int exprIndex = state.heap.allocTemp();
     emitter.emit(StackOpCode.POP_TO_HEAP, exprIndex);
-    String endLabel = newLabel("match_end");
-    MatchBuilder builder = new MatchBuilder(emitter, state, endLabel, exprIndex);
+    String endLabel = jumps.newLabel("match_end");
+    MatchBuilder builder = new MatchBuilder(emitter, state, jumps, endLabel, exprIndex);
     consumer.accept(builder);
-    label(endLabel);
+    jumps.label(endLabel);
   }
 
   /**
@@ -171,6 +173,7 @@ public final class ControlFlowBuilder {
     private final InstructionEmitter emitter;
     private final ProgramState state;
     private final String endLabel;
+    private final JumpBuilder jumps;
     private final int exprIndex;
 
     /**
@@ -180,10 +183,11 @@ public final class ControlFlowBuilder {
      * If a case matches, its block is executed and control jumps to the end.
      * </p>
      */
-    MatchBuilder(InstructionEmitter emitter, ProgramState state, String endLabel, int exprIndex) {
+    MatchBuilder(InstructionEmitter emitter, ProgramState state, JumpBuilder jumps, String endLabel, int exprIndex) {
       this.emitter = emitter;
       this.state = state;
       this.endLabel = endLabel;
+      this.jumps = jumps;
       this.exprIndex = exprIndex;
     }
 
@@ -195,15 +199,15 @@ public final class ControlFlowBuilder {
      * @return this builder for chaining
      */
     public MatchBuilder caseVal(IVMValue value, Runnable block) {
-      String nextCase = newLabel("case");
+      String nextCase = jumps.newLabel("case");
       int valueIndex = state.heap.alloc(value);
       emitter.emit(StackOpCode.LOAD_HEAP, exprIndex);
       emitter.emit(StackOpCode.LOAD_HEAP, valueIndex);
       emitter.emit(ComparisonOpCode.EQ);
-      jmpIfFalse(nextCase);
+      jumps.jmpIfFalse(nextCase);
       block.run();
-      jmp(endLabel);
-      label(nextCase);
+      jumps.jmp(endLabel);
+      jumps.label(nextCase);
       return this;
     }
 
@@ -220,7 +224,7 @@ public final class ControlFlowBuilder {
      * @return this builder for chaining
      */
     public MatchBuilder caseRange(IVMValue start, IVMValue end, Runnable block) {
-      String nextCase = newLabel("case");
+      String nextCase = jumps.newLabel("case");
       int startIndex = state.heap.alloc(start);
       int endIndex = state.heap.alloc(end);
       emitter.emit(StackOpCode.LOAD_HEAP, exprIndex);
@@ -236,10 +240,10 @@ public final class ControlFlowBuilder {
       emitter.emit(StackOpCode.LOAD_HEAP, gteResult);
       emitter.emit(StackOpCode.LOAD_HEAP, lteResult);
       emitter.emit(LogicalOpCode.AND);
-      jmpIfFalse(nextCase);
+      jumps.jmpIfFalse(nextCase);
       block.run();
-      jmp(endLabel);
-      label(nextCase);
+      jumps.jmp(endLabel);
+      jumps.label(nextCase);
       return this;
     }
 
@@ -254,7 +258,7 @@ public final class ControlFlowBuilder {
      * @return this builder for chaining
      */
     public MatchBuilder caseList(List<IVMValue> values, Runnable block) {
-      String nextCase = newLabel("case");
+      String nextCase = jumps.newLabel("case");
       boolean first = true;
       for (IVMValue value : values) {
         int valueIndex = state.heap.alloc(value);
@@ -264,10 +268,10 @@ public final class ControlFlowBuilder {
         if (!first) emitter.emit(LogicalOpCode.OR);
         first = false;
       }
-      jmpIfFalse(nextCase);
+      jumps.jmpIfFalse(nextCase);
       block.run();
-      jmp(endLabel);
-      label(nextCase);
+      jumps.jmp(endLabel);
+      jumps.label(nextCase);
       return this;
     }
 
@@ -280,99 +284,6 @@ public final class ControlFlowBuilder {
       block.run();
     }
 
-    /**
-     * Registers a label at the current instruction index.
-     *
-     * @param name the label name
-     */
-    private void label(String name) {
-      state.labels.put(name, state.instructions.size());
-    }
-
-    /**
-     * Generates a unique label name with a given prefix.
-     *
-     * @param prefix label prefix
-     * @return unique label name
-     */
-    private String newLabel(String prefix) {
-      return prefix + "_" + (state.labelCounter++);
-    }
-
-    /**
-     * Emits an unconditional jump to a label.
-     * The target is resolved later during program build.
-     *
-     * @param label the target label
-     */
-    private void jmp(String label) {
-      int index = state.instructions.size();
-      emitter.emit(ControlOpCode.JMP, -1);
-      state.unresolvedJumps.put(index, label);
-    }
-
-    /**
-     * Emits a conditional jump if the top of the stack is false.
-     *
-     * @param label the target label
-     */
-    private void jmpIfFalse(String label) {
-      int index = state.instructions.size();
-      emitter.emit(ControlOpCode.JMP_IF_FALSE, -1);
-      state.unresolvedJumps.put(index, label);
-    }
   }
 
-  /**
-   * Registers a label at the current instruction index.
-   *
-   * @param name the label name
-   */
-  private void label(String name) {
-    state.labels.put(name, state.instructions.size());
-  }
-
-  /**
-   * Generates a unique label name with a given prefix.
-   *
-   * @param prefix label prefix
-   * @return unique label name
-   */
-  private String newLabel(String prefix) {
-    return prefix + "_" + (state.labelCounter++);
-  }
-
-  /**
-   * Emits an unconditional jump to a label.
-   * The target is resolved later during program build.
-   *
-   * @param label the target label
-   */
-  private void jmp(String label) {
-    int index = state.instructions.size();
-    emitter.emit(ControlOpCode.JMP, -1);
-    state.unresolvedJumps.put(index, label);
-  }
-
-  /**
-   * Emits a conditional jump if the top of the stack is false.
-   *
-   * @param label the target label
-   */
-  private void jmpIfFalse(String label) {
-    int index = state.instructions.size();
-    emitter.emit(ControlOpCode.JMP_IF_FALSE, -1);
-    state.unresolvedJumps.put(index, label);
-  }
-
-  /**
-   * Emits a conditional jump if the top of the stack is true.
-   *
-   * @param label the target label
-   */
-  private void jmpIfTrue(String label) {
-    int index = state.instructions.size();
-    emitter.emit(ControlOpCode.JMP_IF_TRUE, -1);
-    state.unresolvedJumps.put(index, label);
-  }
 }
