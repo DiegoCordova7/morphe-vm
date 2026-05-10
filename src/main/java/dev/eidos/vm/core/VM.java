@@ -1,7 +1,7 @@
 package dev.eidos.vm.core;
 
-import dev.eidos.vm.core.io.ConsoleIOHandler;
 import dev.eidos.vm.core.io.IVMIOHandler;
+import dev.eidos.vm.core.metrics.*;
 import dev.eidos.vm.instructions.Instruction;
 
 import java.util.List;
@@ -21,7 +21,9 @@ public final class VM {
 	private final VMHeap heap;
 	private boolean running;
 	private VMScope currentScope;
-	private IVMIOHandler ioHandler = new ConsoleIOHandler();
+	private IVMIOHandler ioHandler;
+	private final VMMetricsCollector metricsCollector  = new VMMetricsCollector();
+	private VMMetrics metrics;
 
 	/**
 		* Creates a new VM instance with the specified program, stack, and heap.
@@ -43,11 +45,31 @@ public final class VM {
 		* or until {@link #stop()} is called.
 		*/
 	public void run() {
+		long startTime = System.nanoTime();
+		metricsCollector.setInstructionCount(program.size());
 		while (running && ip < program.size()) {
 			Instruction instr = program.get(ip);
+			metricsCollector.recordInstructionExecution();
+			metricsCollector.recordStackSize(stack.size());
 			instr.getAction().execute(this, instr);
 			ip++;
 		}
+		metricsCollector.recordStackSize(stack.size());
+		metricsCollector.recordHeapSize(heap.size());
+		metricsCollector.recordRuntime(System.nanoTime() - startTime);
+		metrics = metricsCollector.snapshot();
+	}
+
+	/**
+		* Returns the collected VM execution metrics.
+		* <p>
+		* Returns {@code null} if the VM has not been executed yet.
+		* </p>
+		*
+		* @return the VM metrics snapshot
+		*/
+	public VMMetrics getMetrics() {
+		return metrics;
 	}
 
 	/**

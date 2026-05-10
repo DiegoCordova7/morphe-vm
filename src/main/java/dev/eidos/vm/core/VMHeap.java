@@ -38,9 +38,9 @@ public final class VMHeap {
 		*
 		* @return Number of allocated slots.
 		*/
-	public int used() {
+	public int size() {
 		int count = 0;
-		for (boolean b : used) if (b) count++;
+		for (boolean slot : used) if (slot) count++;
 		return count;
 	}
 
@@ -76,28 +76,21 @@ public final class VMHeap {
 	}
 
 	/**
-		* Frees the value at the given heap index.
+		* Allocates a temporary slot in the heap without assigning a value.
+		* <p>
+		* The slot is marked as used and initialized with {@code null}.
+		* This is useful for intermediate VM operations that require reserving
+		* heap space before assigning a concrete value.
+		* </p>
 		*
-		* @param index The heap index to free.
-		* @throws VMException if the index is invalid or the slot is already free.
-		*/
-	public void free(int index) {
-		if (index < 0 || index >= heap.length || !used[index])
-			throw new VMException("Heap: invalid index " + index);
-		heap[index] = null;
-		used[index] = false;
-	}
-
-	/**
-		* Allocates a temporary slot in the heap without a value.
-		*
-		* @return The index of the allocated temporary slot.
-		* @throws VMException if the heap is full.
+		* @return the allocated heap index
+		* @throws VMException if the heap is full
 		*/
 	public int allocTemp() {
 		for (int i = 0; i < heap.length; i++) {
 			if (!used[i]) {
-				free(i);
+				heap[i] = null;
+				used[i] = true;
 				return i;
 			}
 		}
