@@ -3,23 +3,45 @@ package dev.eidos.vm.core.metrics;
 /**
  * Mutable collector used internally by the VM to track execution metrics.
  * <p>
- * The collector is updated while the VM runs and produces an immutable
- * {@link VMMetrics} snapshot when execution finishes.
+ * The collector is updated incrementally while the VM executes instructions
+ * and produces an immutable {@link VMMetrics} snapshot once execution
+ * completes.
+ * </p>
+ *
+ * <p>
+ * This class is intended for internal runtime instrumentation only.
  * </p>
  */
 public final class VMMetricsCollector {
 
+  /** Total number of executed instructions. */
   private long executedInstructions;
+
+  /** Total number of instructions loaded in the program. */
   private int instructionCount;
+
+  /** Highest stack size reached during execution. */
   private int maxStackSize;
+
+  /** Final stack size after execution completes. */
   private int finalStackSize;
-  private int heapSize;
+
+  /** Total configured heap capacity. */
+  private int heapCapacity;
+
+  /** Current number of allocated heap slots. */
+  private int usedHeapSlots;
+
+  /** Highest number of allocated heap slots reached during execution. */
+  private int peakHeapUsage;
+
+  /** Total VM runtime in nanoseconds. */
   private long runtimeNs;
 
   /**
    * Sets the total number of instructions loaded in the VM program.
    *
-   * @param instructionCount the total instruction count
+   * @param instructionCount total instruction count
    */
   public void setInstructionCount(int instructionCount) {
     this.instructionCount = instructionCount;
@@ -33,10 +55,13 @@ public final class VMMetricsCollector {
   }
 
   /**
-   * Records the current stack size and updates the maximum stack size
-   * if the current value is higher.
+   * Records the current stack size.
+   * <p>
+   * Updates both the final stack size and the maximum stack size reached
+   * during execution.
+   * </p>
    *
-   * @param stackSize the current VM stack size
+   * @param stackSize current VM stack size
    */
   public void recordStackSize(int stackSize) {
     if (stackSize > maxStackSize) {
@@ -47,12 +72,30 @@ public final class VMMetricsCollector {
   }
 
   /**
-   * Records the final heap size.
+   * Records the total heap capacity configured for the VM.
    *
-   * @param heapSize the amount of values stored in the heap
+   * @param heapCapacity heap capacity
    */
-  public void recordHeapSize(int heapSize) {
-    this.heapSize = heapSize;
+  public void recordHeapCapacity(int heapCapacity) {
+    this.heapCapacity = heapCapacity;
+  }
+
+  /**
+   * Records the current number of allocated heap slots.
+   *
+   * @param usedHeapSlots used heap slot count
+   */
+  public void recordUsedHeapSlots(int usedHeapSlots) {
+    this.usedHeapSlots = usedHeapSlots;
+  }
+
+  /**
+   * Records the highest heap usage reached during execution.
+   *
+   * @param peakHeapUsage peak heap usage
+   */
+  public void recordPeakHeapUsage(int peakHeapUsage) {
+    this.peakHeapUsage = peakHeapUsage;
   }
 
   /**
@@ -70,6 +113,7 @@ public final class VMMetricsCollector {
    * @return collected VM metrics
    */
   public VMMetrics snapshot() {
-    return new VMMetrics(executedInstructions, instructionCount, maxStackSize, finalStackSize, heapSize, runtimeNs);
+    return new VMMetrics(executedInstructions, instructionCount, maxStackSize,
+        finalStackSize, heapCapacity, usedHeapSlots, peakHeapUsage, runtimeNs);
   }
 }

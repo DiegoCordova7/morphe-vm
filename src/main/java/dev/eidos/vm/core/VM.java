@@ -47,15 +47,19 @@ public final class VM {
 	public void run() {
 		long startTime = System.nanoTime();
 		metricsCollector.setInstructionCount(program.size());
+		metricsCollector.recordHeapCapacity(heap.capacity());
+
 		while (running && ip < program.size()) {
 			Instruction instr = program.get(ip);
 			metricsCollector.recordInstructionExecution();
-			metricsCollector.recordStackSize(stack.size());
 			instr.getAction().execute(this, instr);
+			metricsCollector.recordStackSize(stack.size());
 			ip++;
 		}
+
 		metricsCollector.recordStackSize(stack.size());
-		metricsCollector.recordHeapSize(heap.size());
+		metricsCollector.recordUsedHeapSlots(heap.used());
+		metricsCollector.recordPeakHeapUsage(heap.peakUsed());
 		metricsCollector.recordRuntime(System.nanoTime() - startTime);
 		metrics = metricsCollector.snapshot();
 	}
