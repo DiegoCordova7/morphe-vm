@@ -12,6 +12,7 @@ repositories {
 
 dependencies {
     testImplementation 'org.junit.jupiter:junit-jupiter:5.10.0'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 }
 
 java {
@@ -28,6 +29,10 @@ tasks.withType(JavaCompile).configureEach {
 
 tasks.test {
     useJUnitPlatform()
+
+    testLogging {
+        events "passed", "skipped", "failed"
+    }
 }
 
 jar {
@@ -41,6 +46,17 @@ publishing {
         mavenJava(MavenPublication) {
             from components.java
             artifactId = 'vm'
+        }
+    }
+
+    repositories {
+        maven {
+            name = "GitHubPackages"
+            url = uri("https://maven.pkg.github.com/DiegoCordova7/eidos-vm")
+            credentials {
+                username = findProperty("gpr.user") ?: System.getenv("GITHUB_ACTOR")
+                password = findProperty("gpr.key") ?: System.getenv("GITHUB_TOKEN")
+            }
         }
     }
 }
