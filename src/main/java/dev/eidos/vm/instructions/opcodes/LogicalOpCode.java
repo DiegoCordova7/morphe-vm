@@ -37,7 +37,7 @@ public enum LogicalOpCode implements IOpCodeAction {
         if (!(a instanceof VMBoolean ab) || !(b instanceof VMBoolean bb)) {
           throw new IllegalArgumentException("AND requires boolean operands");
         }
-        return new VMBoolean(ab.get() && bb.get());
+        return new VMBoolean(ab.getValue() && bb.getValue());
       }, "AND failed");
     }
   },
@@ -52,7 +52,7 @@ public enum LogicalOpCode implements IOpCodeAction {
         if (!(a instanceof VMBoolean ab) || !(b instanceof VMBoolean bb)) {
           throw new IllegalArgumentException("OR requires boolean operands");
         }
-        return new VMBoolean(ab.get() || bb.get());
+        return new VMBoolean(ab.getValue() || bb.getValue());
       }, "OR failed");
     }
   },
@@ -67,7 +67,7 @@ public enum LogicalOpCode implements IOpCodeAction {
         if (!(val instanceof VMBoolean b)) {
           throw new IllegalArgumentException("NOT requires boolean operand");
         }
-        return new VMBoolean(!b.get());
+        return new VMBoolean(!b.getValue());
       }, "NOT failed");
     }
   };

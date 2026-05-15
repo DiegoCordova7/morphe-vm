@@ -25,7 +25,7 @@ public final class VMBoolean implements IVMValue {
    *
    * @return The boolean value.
    */
-  public boolean get() {
+  public boolean getValue() {
     return value;
   }
 

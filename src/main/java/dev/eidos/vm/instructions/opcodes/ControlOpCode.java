@@ -60,7 +60,7 @@ public enum ControlOpCode implements IOpCodeAction {
       if (!(cond instanceof VMBoolean vb))
         throw new VMException("JMP_IF_FALSE requires a boolean on stack");
 
-      if (!vb.get()) vm.jump(targetIp - 1);
+      if (!vb.getValue()) vm.jump(targetIp - 1);
     }
   },
 
@@ -78,7 +78,7 @@ public enum ControlOpCode implements IOpCodeAction {
       if (!(cond instanceof VMBoolean vb))
         throw new VMException("JMP_IF_TRUE requires a boolean on stack");
 
-      if (vb.get()) vm.jump(targetIp - 1);
+      if (vb.getValue()) vm.jump(targetIp - 1);
     }
   }
 }

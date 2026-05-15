@@ -149,7 +149,7 @@ public enum ComparisonOpCode implements IOpCodeAction {
       return as.getValue().compareTo(bs.getValue());
     }
     if (a instanceof VMBoolean ab && b instanceof VMBoolean bb) {
-      return ab.get() == bb.get() ? 0 : 1;
+      return ab.getValue() == bb.getValue() ? 0 : 1;
     }
     throw new IllegalArgumentException("Cannot compare values of different or unsupported types: "
         + a.getClass().getSimpleName() + " and " + b.getClass().getSimpleName()
