@@ -1,9 +1,9 @@
 package dev.eidos.vm.instructions.opcodes;
 
-import dev.eidos.vm.exception.VMException;
 import dev.eidos.vm.core.*;
 import dev.eidos.vm.core.types.IVMValue;
 import dev.eidos.vm.core.types.VMBoolean;
+import dev.eidos.vm.exception.execution.ExpectedBooleanValueException;
 import dev.eidos.vm.instructions.*;
 
 /**
@@ -57,10 +57,7 @@ public enum ControlOpCode implements IOpCodeAction {
       int targetIp = instr.getOperands()[0];
       int condIndex = vm.getStack().pop();
       IVMValue cond = vm.getHeap().get(condIndex);
-
-      if (!(cond instanceof VMBoolean vb))
-        throw new VMException("JMP_IF_FALSE requires a boolean on stack");
-
+      if (!(cond instanceof VMBoolean vb)) throw new ExpectedBooleanValueException("JMP_IF_FALSE");
       if (!vb.getValue()) vm.jump(targetIp - 1);
     }
   },
@@ -75,10 +72,7 @@ public enum ControlOpCode implements IOpCodeAction {
       int targetIp = instr.getOperands()[0];
       int condIndex = vm.getStack().pop();
       IVMValue cond = vm.getHeap().get(condIndex);
-
-      if (!(cond instanceof VMBoolean vb))
-        throw new VMException("JMP_IF_TRUE requires a boolean on stack");
-
+      if (!(cond instanceof VMBoolean vb)) throw new ExpectedBooleanValueException("JMP_IF_TRUE");
       if (vb.getValue()) vm.jump(targetIp - 1);
     }
   }

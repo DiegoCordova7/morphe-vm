@@ -3,6 +3,8 @@ package dev.eidos.vm.instructions.opcodes;
 import dev.eidos.vm.exception.VMException;
 import dev.eidos.vm.core.*;
 import dev.eidos.vm.core.types.*;
+import dev.eidos.vm.exception.execution.ExpectedStringValueException;
+import dev.eidos.vm.exception.scope.GlobalScopeExitException;
 import dev.eidos.vm.instructions.*;
 
 /**
@@ -33,20 +35,9 @@ public enum ScopeOpCode implements IOpCodeAction {
 		public void execute(VM vm, Instruction instr) {
 			int nameIndex = instr.getOperands()[0];
 
-			if (nameIndex < 0 || nameIndex >= vm.getHeap().capacity()) {
-				throw new VMException("STORE: name index out of range: " + nameIndex);
-			}
-
 			IVMValue nameVal = vm.getHeap().get(nameIndex);
-			if (!(nameVal instanceof VMString)) {
-				throw new VMException("STORE: operand is not a valid string");
-			}
+			if (!(nameVal instanceof VMString)) throw new ExpectedStringValueException("STORE");
 			String name = ((VMString) nameVal).getValue();
-
-			if (vm.getStack().isEmpty()) {
-				throw new VMException("STORE: stack underflow when storing variable " + name);
-			}
-
 			int valueIndex = vm.getStack().pop();
 			vm.getCurrentScope().declareVar(name, valueIndex);
 		}
@@ -59,24 +50,10 @@ public enum ScopeOpCode implements IOpCodeAction {
 		@Override
 		public void execute(VM vm, Instruction instr) {
 			int nameIndex = instr.getOperands()[0];
-
-			if (nameIndex < 0 || nameIndex >= vm.getHeap().capacity()) {
-				throw new VMException("LOAD: name index out of range: " + nameIndex);
-			}
-
 			IVMValue nameVal = vm.getHeap().get(nameIndex);
-			if (!(nameVal instanceof VMString)) {
-				throw new VMException("LOAD: operand is not a valid string");
-			}
+			if (!(nameVal instanceof VMString)) throw new ExpectedStringValueException("LOAD");
 			String name = ((VMString) nameVal).getValue();
-
-			int valueIndex;
-			try {
-				valueIndex = vm.getCurrentScope().getVar(name);
-			} catch (RuntimeException e) {
-				throw new VMException("LOAD: variable not defined: " + name);
-			}
-
+			int valueIndex = vm.getCurrentScope().getVar(name);
 			vm.getStack().push(valueIndex);
 		}
 	},
@@ -98,7 +75,7 @@ public enum ScopeOpCode implements IOpCodeAction {
 		@Override
 		public void execute(VM vm, Instruction instr) {
 			VMScope parent = vm.getCurrentScope().getParent();
-			if (parent == null) throw new VMException("Cannot exit the global scope");
+			if (parent == null) throw new GlobalScopeExitException();
 			vm.setCurrentScope(parent);
 		}
 	}
