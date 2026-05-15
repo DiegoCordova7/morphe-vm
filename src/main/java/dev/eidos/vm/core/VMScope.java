@@ -1,5 +1,7 @@
 package dev.eidos.vm.core;
 
+import dev.eidos.vm.exception.scope.UndefinedVariableException;
+
 import java.util.HashMap;
 import java.util.Map;
 
@@ -73,12 +75,12 @@ public final class VMScope {
 		*
 		* @param name The variable name.
 		* @return The heap index of the variable.
-		* @throws VMException if the variable is not defined.
+		* @throws UndefinedVariableException if the variable is not defined.
 		*/
 	public int getVar(String name) {
 		if (vars.containsKey(name)) return vars.get(name);
 		if (parent != null) return parent.getVar(name);
 
-		throw new VMException("Variable not defined: " + name);
+		throw new UndefinedVariableException(name);
 	}
 }

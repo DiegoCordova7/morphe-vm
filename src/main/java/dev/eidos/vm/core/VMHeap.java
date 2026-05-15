@@ -1,6 +1,8 @@
 package dev.eidos.vm.core;
 
 import dev.eidos.vm.core.types.IVMValue;
+import dev.eidos.vm.exception.heap.HeapOutOfMemoryException;
+import dev.eidos.vm.exception.heap.InvalidHeapAddressException;
 
 /**
 	* Represents the heap memory used by the VM.
@@ -71,7 +73,7 @@ public final class VMHeap {
 		*
 		* @param value the value to allocate
 		* @return the heap index of the allocated value
-		* @throws VMException if the heap is full
+		* @throws HeapOutOfMemoryException if the heap is full
 		*/
 	public int alloc(IVMValue value) {
 		for (int i = 0; i < heap.length; i++) {
@@ -82,7 +84,7 @@ public final class VMHeap {
 				return i;
 			}
 		}
-		throw new VMException("Heap full");
+		throw new HeapOutOfMemoryException(heap.length);
 	}
 
 	/**
@@ -94,7 +96,7 @@ public final class VMHeap {
 		* </p>
 		*
 		* @return the allocated heap index
-		* @throws VMException if the heap is full
+		* @throws HeapOutOfMemoryException if the heap is full
 		*/
 	public int allocTemp() {
 		for (int i = 0; i < heap.length; i++) {
@@ -105,7 +107,7 @@ public final class VMHeap {
 				return i;
 			}
 		}
-		throw new VMException("Heap full");
+		throw new HeapOutOfMemoryException(heap.length);
 	}
 
 	/**
@@ -123,11 +125,11 @@ public final class VMHeap {
 		*
 		* @param index the heap index
 		* @return the value stored at the given index
-		* @throws VMException if the index is invalid or the slot is free
+		* @throws InvalidHeapAddressException if the index is invalid or the slot is free
 		*/
 	public IVMValue get(int index) {
 		if (index < 0 || index >= heap.length || !used[index]) {
-			throw new VMException("Heap: invalid index " + index);
+			throw new InvalidHeapAddressException(index, heap.length);
 		}
 		return heap[index];
 	}
@@ -137,11 +139,11 @@ public final class VMHeap {
 		*
 		* @param heapIndex the heap index
 		* @param value the value to set
-		* @throws VMException if the index is invalid or the slot is not in use
+		* @throws InvalidHeapAddressException if the index is invalid or the slot is not in use
 		*/
 	public void set(int heapIndex, IVMValue value) {
 		if (heapIndex < 0 || heapIndex >= heap.length || !used[heapIndex]) {
-			throw new VMException("Heap: invalid index " + heapIndex);
+			throw new InvalidHeapAddressException(heapIndex, heap.length);
 		}
 		heap[heapIndex] = value;
 	}

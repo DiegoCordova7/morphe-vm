@@ -1,11 +1,13 @@
 package dev.eidos.vm.core;
 
+import dev.eidos.vm.exception.stack.*;
+
 /**
 	* Represents a stack used by the VM to manage heap indices.
 	* <p>
 	* VMStack provides typical stack operations such as push, pop, peek, and size checks.
 	* It is implemented using an integer array, where each element represents an index
-	* in the VMHeap. Overflow and underflow conditions throw {@link VMException}.
+	* in the VMHeap. Overflow and underflow conditions throw {@link VMStackException}.
 	* </p>
 	*/
 public final class VMStack {
@@ -27,10 +29,10 @@ public final class VMStack {
 		*
 		* @param index Index of the element (0-based, from bottom of stack).
 		* @return The heap index stored at the given stack position.
-		* @throws VMException If the index is invalid or out of range.
+		* @throws InvalidStackIndexException If the index is invalid or out of range.
 		*/
 	public int get(int index) {
-		if (index < 0 || index > top) throw new VMException("Invalid stack index");
+		if (index < 0 || index > top) throw new InvalidStackIndexException(index, size());
 		return stack[index];
 	}
 
@@ -38,10 +40,10 @@ public final class VMStack {
 		* Pushes a heap index onto the top of the stack.
 		*
 		* @param heapIndex The index in VMHeap to push.
-		* @throws VMException If the stack is full (overflow).
+		* @throws StackOverflowException If the stack is full (overflow).
 		*/
 	public void push(int heapIndex) {
-		if (top + 1 >= stack.length) throw new VMException("Stack overflow");
+		if (top + 1 >= stack.length) throw new StackOverflowException(stack.length);
 		stack[++top] = heapIndex;
 	}
 
@@ -49,10 +51,10 @@ public final class VMStack {
 		* Pops and returns the top element of the stack.
 		*
 		* @return The heap index at the top of the stack.
-		* @throws VMException If the stack is empty (underflow).
+		* @throws StackUnderflowException If the stack is empty (underflow).
 		*/
 	public int pop() {
-		if (top < 0) throw new VMException("Stack underflow");
+		if (top < 0) throw new StackUnderflowException();
 		return stack[top--];
 	}
 
@@ -60,10 +62,10 @@ public final class VMStack {
 		* Returns the top element without removing it.
 		*
 		* @return The heap index at the top of the stack.
-		* @throws VMException If the stack is empty.
+		* @throws EmptyStackException If the stack is empty.
 		*/
 	public int peek() {
-		if (top < 0) throw new VMException("Stack empty");
+		if (top < 0) throw new EmptyStackException();
 		return stack[top];
 	}
 

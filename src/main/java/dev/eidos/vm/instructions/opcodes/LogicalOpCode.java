@@ -2,6 +2,7 @@ package dev.eidos.vm.instructions.opcodes;
 
 import dev.eidos.vm.core.*;
 import dev.eidos.vm.core.types.*;
+import dev.eidos.vm.exception.execution.ExpectedBooleanValueException;
 import dev.eidos.vm.instructions.*;
 
 /**
@@ -22,7 +23,7 @@ import dev.eidos.vm.instructions.*;
  * </ul>
  *
  * <p>
- * Note: Using operands that are not {@link VMBoolean} will throw an {@link IllegalArgumentException}.
+ * Note: Using operands that are not {@link VMBoolean} will throw an {@link ExpectedBooleanValueException}.
  * </p>
  */
 public enum LogicalOpCode implements IOpCodeAction {
@@ -35,7 +36,7 @@ public enum LogicalOpCode implements IOpCodeAction {
     public void execute(VM vm, Instruction instr) {
       VMUtils.binaryOp(vm, (a, b) -> {
         if (!(a instanceof VMBoolean ab) || !(b instanceof VMBoolean bb)) {
-          throw new IllegalArgumentException("AND requires boolean operands");
+          throw new ExpectedBooleanValueException("AND");
         }
         return new VMBoolean(ab.getValue() && bb.getValue());
       }, "AND failed");
@@ -50,7 +51,7 @@ public enum LogicalOpCode implements IOpCodeAction {
     public void execute(VM vm, Instruction instr) {
       VMUtils.binaryOp(vm, (a, b) -> {
         if (!(a instanceof VMBoolean ab) || !(b instanceof VMBoolean bb)) {
-          throw new IllegalArgumentException("OR requires boolean operands");
+          throw new ExpectedBooleanValueException("OR");
         }
         return new VMBoolean(ab.getValue() || bb.getValue());
       }, "OR failed");
@@ -65,7 +66,7 @@ public enum LogicalOpCode implements IOpCodeAction {
     public void execute(VM vm, Instruction instr) {
       VMUtils.unaryOp(vm, val -> {
         if (!(val instanceof VMBoolean b)) {
-          throw new IllegalArgumentException("NOT requires boolean operand");
+          throw new ExpectedBooleanValueException("NOT");
         }
         return new VMBoolean(!b.getValue());
       }, "NOT failed");

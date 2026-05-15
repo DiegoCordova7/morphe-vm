@@ -2,6 +2,7 @@ package dev.eidos.vm.instructions.opcodes;
 
 import dev.eidos.vm.core.*;
 import dev.eidos.vm.core.types.*;
+import dev.eidos.vm.exception.execution.InvalidComparisonException;
 import dev.eidos.vm.instructions.*;
 
 import java.util.function.BiPredicate;
@@ -72,15 +73,13 @@ public enum ComparisonOpCode implements IOpCodeAction {
     IVMValue b = ops.b();
 
     if (isRelationalOp() && a instanceof VMBoolean && b instanceof VMBoolean) {
-      VMUtils.pushError(vm, "Invalid boolean comparison for operator " + this);
-      return;
+      throw new InvalidComparisonException(this.name(), a, b);
     }
 
     try {
       boolean result = comparator.test(a, b);
       vm.getStack().push(vm.getHeap().alloc(new VMBoolean(result)));
-
-    } catch (IllegalArgumentException e) {
+    } catch (InvalidComparisonException e) {
       VMUtils.pushError(vm, e.getMessage());
     }
   }
@@ -151,8 +150,6 @@ public enum ComparisonOpCode implements IOpCodeAction {
     if (a instanceof VMBoolean ab && b instanceof VMBoolean bb) {
       return ab.getValue() == bb.getValue() ? 0 : 1;
     }
-    throw new IllegalArgumentException("Cannot compare values of different or unsupported types: "
-        + a.getClass().getSimpleName() + " and " + b.getClass().getSimpleName()
-    );
+    throw new InvalidComparisonException("comparison", a, b);
   }
 }

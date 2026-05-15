@@ -1,7 +1,7 @@
 package dev.eidos.vm.builder;
 
-import dev.eidos.vm.core.VMException;
 import dev.eidos.vm.core.types.*;
+import dev.eidos.vm.exception.builder.UnsupportedLiteralException;
 import dev.eidos.vm.instructions.opcodes.StackOpCode;
 
 /**
@@ -33,7 +33,7 @@ public final class StackBuilder {
    *
    * @param value the literal value (Integer, Double, String, or IVMValue)
    * @return the heap index of the allocated value
-   * @throws VMException if the literal type is unsupported
+   * @throws UnsupportedLiteralException if the literal type is unsupported
    */
   private int literal(Object value) {
     IVMValue v;
@@ -41,7 +41,7 @@ public final class StackBuilder {
     else if (value instanceof Integer i) v = new VMInteger(i);
     else if (value instanceof Double d) v = new VMDouble(d);
     else if (value instanceof String s) v = new VMString(s);
-    else throw new VMException("Unsupported literal: " + value);
+    else throw new UnsupportedLiteralException(value);
     return state.heap.alloc(v);
   }
 

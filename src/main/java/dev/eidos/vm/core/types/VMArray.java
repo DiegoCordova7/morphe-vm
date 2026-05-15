@@ -1,7 +1,7 @@
 package dev.eidos.vm.core.types;
 
-import dev.eidos.vm.core.VMException;
 import dev.eidos.vm.core.VMHeap;
+import dev.eidos.vm.exception.types.array.VMArrayIndexOutOfBoundsException;
 
 import java.util.Arrays;
 import java.util.List;
@@ -49,7 +49,7 @@ public final class VMArray implements IVMValue {
    *
    * @param index The position in the array.
    * @return The heap index stored at that position.
-   * @throws VMException If the index is out of bounds.
+   * @throws VMArrayIndexOutOfBoundsException If the index is out of bounds.
    */
   public int get(int index) {
     checkBounds(index);
@@ -61,7 +61,7 @@ public final class VMArray implements IVMValue {
    *
    * @param index     The position in the array.
    * @param heapIndex The heap index to store.
-   * @throws VMException If the index is out of bounds.
+   * @throws VMArrayIndexOutOfBoundsException If the index is out of bounds.
    */
   public void set(int index, int heapIndex) {
     checkBounds(index);
@@ -72,11 +72,11 @@ public final class VMArray implements IVMValue {
    * Checks if the given index is within the array bounds.
    *
    * @param index The index to check.
-   * @throws VMException If the index is out of bounds.
+   * @throws VMArrayIndexOutOfBoundsException If the index is out of bounds.
    */
   private void checkBounds(int index) {
     if (index < 0 || index >= elements.length) {
-      throw new VMException("Array index out of bounds: " + index);
+      throw new VMArrayIndexOutOfBoundsException(index, elements.length);
     }
   }
 

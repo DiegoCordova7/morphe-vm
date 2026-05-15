@@ -2,6 +2,9 @@ package dev.eidos.vm.instructions.opcodes;
 
 import dev.eidos.vm.core.*;
 import dev.eidos.vm.core.types.*;
+import dev.eidos.vm.exception.execution.ExpectedArrayValueException;
+import dev.eidos.vm.exception.execution.ExpectedIntegerValueException;
+import dev.eidos.vm.exception.execution.NegativeArraySizeException ;
 import dev.eidos.vm.instructions.*;
 
 /**
@@ -33,11 +36,11 @@ public enum ArrayOpCode implements IOpCodeAction {
       IVMValue sizeVal = vm.getHeap().get(sizeIndex);
 
       if (!(sizeVal instanceof VMInteger si)) {
-        throw new VMException("ARRAY_NEW requires integer size");
+        throw new ExpectedIntegerValueException("ARRAY_NEW");
       }
 
       int size = si.getValue();
-      if (size < 0) throw new VMException("Negative array size");
+      if (size < 0) throw new NegativeArraySizeException(size);
 
       VMArray array = new VMArray(size);
       int arrayIndex = vm.getHeap().alloc(array);
@@ -59,11 +62,11 @@ public enum ArrayOpCode implements IOpCodeAction {
       IVMValue idxVal = vm.getHeap().get(indexIndex);
 
       if (!(arrVal instanceof VMArray arr)) {
-        throw new VMException("ARRAY_GET on non-array");
+        throw new ExpectedArrayValueException("ARRAY_GET");
       }
 
       if (!(idxVal instanceof VMInteger ii)) {
-        throw new VMException("ARRAY_GET index must be integer");
+        throw new ExpectedIntegerValueException("ARRAY_GET index");
       }
 
       int valueIndex = arr.get(ii.getValue());
@@ -86,11 +89,11 @@ public enum ArrayOpCode implements IOpCodeAction {
       IVMValue idxVal = vm.getHeap().get(indexIndex);
 
       if (!(arrVal instanceof VMArray arr)) {
-        throw new VMException("ARRAY_SET on non-array");
+        throw new ExpectedArrayValueException("ARRAY_SET");
       }
 
       if (!(idxVal instanceof VMInteger ii)) {
-        throw new VMException("ARRAY_SET index must be integer");
+        throw new ExpectedIntegerValueException("ARRAY_SET index");
       }
 
       arr.set(ii.getValue(), valueIndex);
@@ -109,7 +112,7 @@ public enum ArrayOpCode implements IOpCodeAction {
       IVMValue arrVal = vm.getHeap().get(arrayIndex);
 
       if (!(arrVal instanceof VMArray arr)) {
-        throw new VMException("ARRAY_LENGTH on non-array");
+        throw new ExpectedArrayValueException("ARRAY_LENGTH");
       }
 
       int lenIndex = vm.getHeap().alloc(new VMInteger(arr.length()));

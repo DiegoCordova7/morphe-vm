@@ -1,8 +1,8 @@
 package dev.eidos.vm.builder;
 
-import dev.eidos.vm.core.VMException;
 import dev.eidos.vm.core.VMHeap;
 import dev.eidos.vm.core.types.IVMValue;
+import dev.eidos.vm.exception.builder.UndefinedLabelException;
 import dev.eidos.vm.instructions.Instruction;
 
 import java.util.ArrayList;
@@ -441,14 +441,14 @@ public final class VMProgramBuilder {
 		* and returns the finalized list of VM instructions.
 		*
 		* @return this builder for chaining
-		* @throws VMException if a jump references an undefined label
+		* @throws UndefinedLabelException  if a jump references an undefined label
 		*/
 	public List<Instruction> build() {
 		for (Map.Entry<Integer, String> entry : state.unresolvedJumps.entrySet()) {
 			int instrIndex = entry.getKey();
 			String label = entry.getValue();
 			Integer target = state.labels.get(label);
-			if (target == null) throw new VMException("Undefined label: " + label);
+			if (target == null) throw new UndefinedLabelException(label);
 			state.instructions.get(instrIndex).getOperands()[0] = target;
 		}
 

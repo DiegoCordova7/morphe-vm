@@ -1,5 +1,6 @@
 package dev.eidos.vm.instructions.opcodes;
 
+import dev.eidos.vm.exception.VMException;
 import dev.eidos.vm.core.*;
 import dev.eidos.vm.core.types.IVMValue;
 import dev.eidos.vm.core.types.VMBoolean;
