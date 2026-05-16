@@ -1,6 +1,6 @@
 package dev.eidos.vm.exception;
 
-import dev.eidos.exception.EidosException;
+import dev.eidos.common.exception.EidosException;
 
 /**
 	* Exception thrown when a runtime error occurs in the VM.
