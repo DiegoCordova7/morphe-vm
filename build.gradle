@@ -3,14 +3,14 @@ plugins {
     id 'maven-publish'
 }
 
-group = 'dev.eidos'
-version = '1.0.3'
+group = 'dev.morphe'
+version = '1.0.0'
 
 repositories {
     mavenCentral()
 
     maven {
-        url = uri("https://maven.pkg.github.com/DiegoCordova7/eidos-common")
+        url = uri("https://maven.pkg.github.com/DiegoCordova7/morphe-common")
 
         credentials {
             username = findProperty("gpr.user") ?: System.getenv("GITHUB_ACTOR")
@@ -20,7 +20,7 @@ repositories {
 }
 
 dependencies {
-    api 'dev.eidos:eidos-common:1.0.0'
+    api 'dev.morphe:morphe-common:1.0.0'
     testImplementation 'org.junit.jupiter:junit-jupiter:5.10.0'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 }
@@ -42,11 +42,16 @@ tasks.test {
 
     testLogging {
         events "passed", "skipped", "failed"
+        exceptionFormat = 'full'
+        showExceptions = true
+        showCauses = true
+        showStackTraces = true
+        showStandardStreams = true
     }
 }
 
 jar {
-    exclude('dev/eidos/vm/debug/**')
+    exclude('dev/morphe/vm/debug/**')
     archiveBaseName.set('vm')
     archiveVersion.set(version)
 }
@@ -62,7 +67,7 @@ publishing {
     repositories {
         maven {
             name = "GitHubPackages"
-            url = uri("https://maven.pkg.github.com/DiegoCordova7/eidos-vm")
+            url = uri("https://maven.pkg.github.com/DiegoCordova7/morphe-vm")
             credentials {
                 username = findProperty("gpr.user") ?: System.getenv("GITHUB_ACTOR")
                 password = findProperty("gpr.key") ?: System.getenv("GITHUB_TOKEN")

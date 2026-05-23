@@ -1,6 +1,6 @@
-# Eidos VM
+# Morphe VM
 
-Eidos VM is a stack-based virtual machine with heap-managed runtime values and a structured instruction system. It is designed to execute programs compiled from the Eidos language through a custom IR pipeline.
+Morphe VM is a stack-based virtual machine with heap-managed runtime values and a structured instruction system. It is designed to execute programs compiled from the Morphe language through a custom IR pipeline.
 
 The VM provides a modular instruction set, a heap-based memory model, and a fluent builder API for constructing and lowering high-level constructs into executable bytecode-like instructions.
 
@@ -24,7 +24,7 @@ The VM provides a modular instruction set, a heap-based memory model, and a flue
 
 ## Installation
 
-The Eidos VM can be added as a local dependency in your project:
+The Morphe VM can be added as a local dependency in your project:
 
 ```gradle
 dependencies {
@@ -149,7 +149,7 @@ See the LICENSE file for details.
 
 ## Notes
 
-This VM is part of the Eidos language ecosystem and is designed to evolve alongside its compiler, type system, and IR generation pipeline.
+This VM is part of the Morphe language ecosystem and is designed to evolve alongside its compiler, type system, and IR generation pipeline.
 
 Its architecture prioritizes:
 
