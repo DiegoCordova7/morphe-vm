@@ -46,6 +46,49 @@ public enum ArrayOpCode implements IOpCodeAction {
     }
   },
 
+  ARRAY_NEW_MULTI {
+    @Override
+    public void execute(VM vm, Instruction instr) {
+      int dimensions = instr.operand(0);
+
+      int[] sizes = new int[dimensions];
+
+      for (int i = dimensions - 1; i >= 0; i--) {
+        int sizeIndex = vm.getStack().pop();
+        IVMValue sizeVal = vm.getHeap().get(sizeIndex);
+
+        if (!(sizeVal instanceof VMInteger si)) {
+          throw new ExpectedIntegerValueException("ARRAY_NEW_MULTI");
+        }
+
+        int size = si.getValue();
+
+        if (size < 0) {
+          throw new VMNegativeArraySizeException(size);
+        }
+
+        sizes[i] = size;
+      }
+
+      int arrayIndex = createMultiArray(vm, sizes, 0);
+      vm.getStack().push(arrayIndex);
+    }
+
+    private int createMultiArray(VM vm, int[] sizes, int depth) {
+      VMArray array = new VMArray(sizes[depth]);
+      int arrayIndex = vm.getHeap().alloc(array);
+
+      if (depth < sizes.length - 1) {
+        for (int i = 0; i < sizes[depth]; i++) {
+          int childIndex = createMultiArray(vm, sizes, depth + 1);
+          array.set(i, childIndex);
+        }
+      }
+
+      return arrayIndex;
+    }
+  },
+
   /**
    * Retrieves the element at the given index from the array.
    * Pops array index and element index from the stack, pushes the value index.

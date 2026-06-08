@@ -371,6 +371,10 @@ public final class VMProgramBuilder {
 		return emit(array::newArray);
 	}
 
+	public VMProgramBuilder newMultiArray(int dimensions) {
+		return emit(() -> array.newMultiArray(dimensions));
+	}
+
 	/**
 		* Emits an ARRAY_GET instruction to retrieve an element from an array.
 		* <p>

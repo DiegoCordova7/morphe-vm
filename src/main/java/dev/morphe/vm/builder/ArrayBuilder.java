@@ -37,6 +37,10 @@ public final class ArrayBuilder {
     emitter.emit(ArrayOpCode.ARRAY_NEW);
   }
 
+  public void newMultiArray(int dimensions) {
+    emitter.emit(ArrayOpCode.ARRAY_NEW, dimensions);
+  }
+
   /**
    * Emits an ARRAY_GET instruction to retrieve an element from an array.
    * <p>
