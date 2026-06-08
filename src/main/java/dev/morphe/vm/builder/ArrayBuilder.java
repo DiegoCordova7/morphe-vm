@@ -37,8 +37,15 @@ public final class ArrayBuilder {
     emitter.emit(ArrayOpCode.ARRAY_NEW);
   }
 
+  /**
+   * Emits an ARRAY_NEW instruction to create a new array.
+   * <p>
+   * The size must be provided on the stack before calling this instruction.
+   * The resulting array index is pushed onto the stack.
+   * </p>
+   */
   public void newMultiArray(int dimensions) {
-    emitter.emit(ArrayOpCode.ARRAY_NEW, dimensions);
+    emitter.emit(ArrayOpCode.ARRAY_NEW_MULTI, dimensions);
   }
 
   /**

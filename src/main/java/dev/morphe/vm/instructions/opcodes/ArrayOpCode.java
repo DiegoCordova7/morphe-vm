@@ -11,26 +11,50 @@ import dev.morphe.vm.instructions.IOpCodeAction;
 import dev.morphe.vm.instructions.Instruction;
 
 /**
- * Enum representing array operations for the VM.
+ * Enum representing array-related VM opcodes.
  * <p>
- * Each enum constant implements {@link IOpCodeAction} and defines the behavior
- * of a specific array opcode, including creation, access, assignment, and length retrieval.
+ * Arrays in the VM are heap-allocated values represented by {@link VMArray}.
+ * A {@code VMArray} stores heap indices, not raw values. Therefore, every
+ * array element is a reference to another heap slot.
  * </p>
+ *
  * <p>
- * Supported array opcodes:
+ * This design also allows multidimensional arrays to be represented as
+ * arrays of arrays. For example, {@code Integer[][]} is stored as a
+ * {@code VMArray} whose elements point to other {@code VMArray} instances.
  * </p>
+ *
  * <ul>
- *   <li>{@link #ARRAY_NEW} - creates a new array of a given size (from stack) and pushes its heap index.</li>
- *   <li>{@link #ARRAY_GET} - retrieves an element from an array at a specified index.</li>
- *   <li>{@link #ARRAY_SET} - sets a value at a specified index in an array.</li>
- *   <li>{@link #ARRAY_LENGTH} - retrieves the length of the array.</li>
+ *   <li>{@link #ARRAY_NEW} - creates a one-dimensional array.</li>
+ *   <li>{@link #ARRAY_NEW_MULTI} - creates a multidimensional array.</li>
+ *   <li>{@link #ARRAY_GET} - retrieves an array element reference.</li>
+ *   <li>{@link #ARRAY_SET} - stores a heap reference into an array element.</li>
+ *   <li>{@link #ARRAY_LENGTH} - pushes the length of an array.</li>
  * </ul>
  */
 public enum ArrayOpCode implements IOpCodeAction {
 
   /**
-   * Creates a new array with a size provided on the stack.
-   * Pushes the heap index of the new array onto the stack.
+   * Creates a one-dimensional array.
+   * <p>
+   * Stack before execution:
+   * </p>
+   * <pre>
+   * [..., sizeIndex]
+   * </pre>
+   *
+   * <p>
+   * {@code sizeIndex} must point to a {@link VMInteger} in the heap.
+   * The opcode allocates a {@link VMArray} of that size and pushes the
+   * heap index of the created array.
+   * </p>
+   *
+   * <p>
+   * Stack after execution:
+   * </p>
+   * <pre>
+   * [..., arrayIndex]
+   * </pre>
    */
   ARRAY_NEW {
     @Override
@@ -46,30 +70,49 @@ public enum ArrayOpCode implements IOpCodeAction {
     }
   },
 
+  /**
+   * Creates a multidimensional array.
+   * <p>
+   * The number of dimensions is provided as the first instruction operand:
+   * </p>
+   * <pre>
+   * ARRAY_NEW_MULTI [dimensions]
+   * </pre>
+   *
+   * <p>
+   * Stack before execution for {@code dimensions = n}:
+   * </p>
+   * <pre>
+   * [..., size1Index, size2Index, ..., sizeNIndex]
+   * </pre>
+   *
+   * <p>
+   * Each size index must point to a {@link VMInteger}. The opcode consumes
+   * all dimension sizes, creates nested {@link VMArray} instances recursively,
+   * and pushes the heap index of the outermost array.
+   * </p>
+   *
+   * <p>
+   * Stack after execution:
+   * </p>
+   * <pre>
+   * [..., outerArrayIndex]
+   * </pre>
+   *
+   */
   ARRAY_NEW_MULTI {
     @Override
     public void execute(VM vm, Instruction instr) {
       int dimensions = instr.operand(0);
-
       int[] sizes = new int[dimensions];
-
       for (int i = dimensions - 1; i >= 0; i--) {
         int sizeIndex = vm.getStack().pop();
         IVMValue sizeVal = vm.getHeap().get(sizeIndex);
-
-        if (!(sizeVal instanceof VMInteger si)) {
-          throw new ExpectedIntegerValueException("ARRAY_NEW_MULTI");
-        }
-
+        if (!(sizeVal instanceof VMInteger si)) throw new ExpectedIntegerValueException("ARRAY_NEW_MULTI");
         int size = si.getValue();
-
-        if (size < 0) {
-          throw new VMNegativeArraySizeException(size);
-        }
-
+        if (size < 0) throw new VMNegativeArraySizeException(size);
         sizes[i] = size;
       }
-
       int arrayIndex = createMultiArray(vm, sizes, 0);
       vm.getStack().push(arrayIndex);
     }
@@ -77,14 +120,12 @@ public enum ArrayOpCode implements IOpCodeAction {
     private int createMultiArray(VM vm, int[] sizes, int depth) {
       VMArray array = new VMArray(sizes[depth]);
       int arrayIndex = vm.getHeap().alloc(array);
-
       if (depth < sizes.length - 1) {
         for (int i = 0; i < sizes[depth]; i++) {
           int childIndex = createMultiArray(vm, sizes, depth + 1);
           array.set(i, childIndex);
         }
       }
-
       return arrayIndex;
     }
   },
