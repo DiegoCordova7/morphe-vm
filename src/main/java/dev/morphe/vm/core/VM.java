@@ -65,6 +65,35 @@ public final class VM {
 		metrics = metricsCollector.snapshot();
 	}
 
+	public String dumpProgram() {
+		StringBuilder sb = new StringBuilder();
+
+		for (int i = 0; i < program.size(); i++) {
+			sb.append(i)
+					.append(": ")
+					.append(program.get(i))
+					.append('\n');
+		}
+
+		return sb.toString();
+	}
+
+	public String dump() {
+		Instruction current = ip < program.size() ? program.get(ip) : null;
+		return String.format("""
+      ===== VM =====
+      IP: %d
+      CURRENT: %s
+
+      STACK:
+      %s
+
+      HEAP:
+      %s
+      """, ip, current, stack, heap
+		);
+	}
+
 	/**
 		* Returns the collected VM execution metrics.
 		* <p>

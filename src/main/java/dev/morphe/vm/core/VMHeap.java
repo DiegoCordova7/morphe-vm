@@ -147,4 +147,25 @@ public final class VMHeap {
 		}
 		heap[heapIndex] = value;
 	}
+
+	@Override
+	public String toString() {
+		StringBuilder sb = new StringBuilder();
+		sb.append("Heap(used=")
+				.append(usedCount)
+				.append("/")
+				.append(heap.length)
+				.append(", peak=")
+				.append(peakUsed)
+				.append(")\n");
+		for (int i = 0; i < heap.length; i++) {
+			if (used[i]) {
+				sb.append(i)
+						.append(" -> ")
+						.append(heap[i])
+						.append('\n');
+			}
+		}
+		return sb.toString();
+	}
 }

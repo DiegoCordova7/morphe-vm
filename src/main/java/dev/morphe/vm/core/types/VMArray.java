@@ -98,4 +98,9 @@ public final class VMArray implements IVMValue {
     sb.append("]");
     return sb.toString();
   }
+
+  @Override
+  public String toString() {
+    return "Array" + Arrays.toString(elements);
+  }
 }

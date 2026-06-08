@@ -94,12 +94,15 @@ public final class VMStack {
 		*/
 	@Override
 	public String toString() {
-		StringBuilder sb = new StringBuilder("[");
+		StringBuilder sb = new StringBuilder();
+		sb.append("Stack(size=")
+				.append(size())
+				.append(") [");
 		for (int i = 0; i <= top; i++) {
 			sb.append(stack[i]);
 			if (i < top) sb.append(", ");
 		}
-		sb.append("]");
+		sb.append(']');
 		return sb.toString();
 	}
 }
